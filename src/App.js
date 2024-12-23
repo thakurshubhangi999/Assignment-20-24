@@ -6,9 +6,9 @@ import {
   faCircleMinus,
   faCartShopping,
 } from "@fortawesome/free-solid-svg-icons";
+import PopupConfirm from "./components/PopupConfirm";
 
 function App() {
-
   // Array categories with subcategories and products
   const categories = [
     {
@@ -60,16 +60,16 @@ function App() {
       ],
     },
     { name: "Fashion", subcategories: [] },
-    {
-      name: "Books",
-      subcategories: [],
-    },
+    { name: "Books", subcategories: [] },
   ];
 
-  // State variables for active category, sub-category, and cart count
+  // State variables for managing active category, subcategory, cart count, popup, and selected product
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeSubcategory, setActiveSubcategory] = useState(null);
   const [cartCount, setCartCount] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [cartProducts, setCartProducts] = useState(new Set());
 
   // Function to filter products based on active category and subcategory
   const activeProducts =
@@ -79,12 +79,7 @@ function App() {
         (subcategory) => subcategory.name === activeSubcategory
       )?.products || [];
 
-  // Function to handle adding items to the cart
-  const addToCart = () => {
-    setCartCount(cartCount + 1);
-  };
-
-  // Function to toggle category selection 
+  // Function to toggle category selection
   const toggleCategory = (categoryName) => {
     if (activeCategory === categoryName) {
       setActiveCategory(null);
@@ -95,9 +90,29 @@ function App() {
     }
   };
 
+  // Function to handle adding items to the cart
+  const AddToCart = (product) => {
+    if (!cartProducts.has(product)) {
+      setSelectedProduct(product);
+      setShowPopup(true);
+    }
+  };
+
+  // Confirm adding product to the cart
+  const handleConfirm = () => {
+    setCartProducts(new Set(cartProducts.add(selectedProduct)));
+    setCartCount(cartCount + 1);
+    setShowPopup(false);
+  };
+
+  // Cancel action in popup
+  const handleCancel = () => {
+    setShowPopup(false);
+  };
+
   return (
     <div className="app">
-      {/* Header */}
+      {/* Header Section */}
       <header className="header">
         <h1 className="app-name">Bengaluru eShopping</h1>
         <div className="cart">
@@ -108,7 +123,7 @@ function App() {
       </header>
 
       <div className="content">
-        {/* Sidebar */}
+        {/* Accordion for category */}
         <div className="accordion">
           {categories.map((category, index) => (
             <div key={index}>
@@ -128,6 +143,7 @@ function App() {
                 />
                 {category.name}
               </div>
+              {/* Subcategories list */}
               {activeCategory === category.name && (
                 <div className="subcategories">
                   {category.subcategories.length > 0 ? (
@@ -159,7 +175,7 @@ function App() {
           ))}
         </div>
 
-        {/* Main Content */}
+        {/* Product list */}
         <div className="product-list">
           {activeSubcategory ? (
             <>
@@ -174,7 +190,17 @@ function App() {
                 {activeProducts.map((product, index) => (
                   <div key={index} className="product-item">
                     <p>{product}</p>
-                    <button onClick={addToCart}>Add to cart</button>{" "}
+                    <button
+                      onClick={() => AddToCart(product)}
+                      disabled={cartProducts.has(product)}
+                      className={
+                        cartProducts.has(product) ? "added-to-cart" : ""
+                      }
+                    >
+                      {cartProducts.has(product)
+                        ? "Added to Cart"
+                        : "Add to cart"}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -184,6 +210,14 @@ function App() {
           )}
         </div>
       </div>
+      {/* Confirmation Popup for adding products to cart */}
+      {showPopup && (
+        <PopupConfirm
+          message={`Are you sure you want to add ${selectedProduct} to the cart?`}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      )}
     </div>
   );
 }
