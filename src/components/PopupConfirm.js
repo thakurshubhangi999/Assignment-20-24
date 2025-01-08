@@ -1,7 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 // Functional component for rendering a confirmation Popup
 const PopupConfirm = ({ message, onConfirm, onCancel }) => {
+  useEffect(() => {
+    const handleKeydown = (e) => {
+      if (e.key === "Escape") {
+        console.log(onConfirm);
+        onCancel();
+      }
+    };
+    if (onConfirm) {
+      window.addEventListener("keydown", handleKeydown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    };
+  }, [onConfirm, onCancel]);
+  if (!onConfirm) return null;
+
   return (
     <div className="popup-window">
       <div className="popup">
@@ -16,7 +32,7 @@ const PopupConfirm = ({ message, onConfirm, onCancel }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default PopupConfirm;
